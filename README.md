@@ -13,9 +13,9 @@ First of all we need the express generator, which gives us a basic structure for
 Now the following structure should have been created:
 ```
    yourApplicationName\
-	|-- \public\
+    |-- \public\
     |  |-- \javascripts\
-	|  |-- \images\
+    |  |-- \images\
     |  |-- \stylesheets\
     |  |-- |--\style.css
     |--|-- \index.html
