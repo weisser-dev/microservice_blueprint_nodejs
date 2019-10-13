@@ -38,7 +38,6 @@ app.get('/getByName/:name',  (req, res)  =>  {
     // !!! Never build anything like this unless you want to risk SQL injection.
     // con.query("SELECT * FROM someTable WHERE name = '" + req.params.name + "'", function (err, result, fields) {
     // When query values are variables provided by the user, you should escape the values, like that "mysql.escape( )"
-    var reqName = JSON.stringify(req.params.name);
     con.query("SELECT * FROM someTable WHERE name = " + mysql.escape(req.params.name), function (err, result, fields) {    
         if (err) return res.send(err);
         return res.json(result);
