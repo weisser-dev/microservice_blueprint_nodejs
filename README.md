@@ -1,12 +1,10 @@
-# microservice_blueprint_nodejs
-https://whit-e.com/building-own-rest-api
-## Build a simple microservice with node.js
-### Prerequisites
+
+## Prerequisites
 - installed Node.js and Npm 
 - basic knowledge of JavaScript and Node.js
 - enjoy programming
 
-### Preparations
+## Preparations
 In this part we will create our base project, remove unused files and install all necessary dependencies which we will work with later.
 First of all we need the express generator, which gives us a basic structure for our application:
 ``npm install express-generator -g``. Now we can build our application: ``express --no-view yourApplicationName``
@@ -40,7 +38,7 @@ npm install momentum
 	*What you can optionally install is **nodemon**: **"Monitor for any changes in your node.js application and automatically restart the server - perfect for development"** you could start your Application with nodemon app.js instead of npm start*
 Now we have prepared everything so far to start with the implementation of our service.
 
-### Build our Service
+## Build our Service
 First we open, with the IDE of yourchoice, the ``app.js`` and remove there the lines 6,7,15, 17 and 18, cause our application could not start with these (we already removed the files for this lines of code).
 Now our ``app.js``  should look like this:
 ```javascript
@@ -101,7 +99,7 @@ request.body.yourParam		-> 	is often used by POST-Methods
 ```
 Up to this point we already have a microservice which provides us with mocked answers and integrated hotreloading. The last step is to access the data from the database.
 
-### Connect to the Database
+## Connect to the Database
 In addition to routing to path XYZ, we also need a database from which we load / save the corresponding data. For this I simply used a MySQL (at remotemysql.com there are e.g. free databases).
 In our Preparations we have already installed the Momentum and Mysql dependencies for nodejs. Info: *Momentum is only needed to create a valid timestamp (so if you don't need a timestamp - you don't have to install it).*
 First we import our packages:
@@ -115,7 +113,7 @@ var connection = mysql.createConnection({
 	host: "localhost",
 	// never save credentials to your source code, store them in environment variables!
 	user: process.env.dbUser,
-    password: process.env.dbPassword, 
+	password: process.env.dbPassword, 
 	database: "examples"
 }
 ```
@@ -166,6 +164,67 @@ function uuidv4() {
 Here we first ask if all query parameters are existing. Then we create our SQL statement and pass the required values to con.query as second parameter.
 
 That would be it. Now we have a running MicroService, which retrieves data from a MySQL and provides them as JSON via the endpoints.
+Your app.js should now look like this:
+```javascript
+var express = require('express');
+var path = require('path');
+var cookieParser = require('cookie-parser');
+var logger = require('morgan');
+var mysql = require('mysql');
+var moment = require('moment');
+
+var app = express();
+
+app.use(logger('dev'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+
+var con = mysql.createConnection({
+	host: "localhost",
+	user: process.env.dbUser,
+	password: process.env.dbPassword,
+	database: "examples"
+});
+
+// http://localhost:3000/insert?name=someText&text=irgendein&description=lol
+app.get('/insert', (req, res) => {
+	if(typeof req.query.name !== 'undefined' && typeof req.query.text !== 'undefined' && typeof req.query.description !== 'undefined') {
+		var sql = "INSERT INTO someTable (uid, timestamp, name, text, description ) VALUES ?";
+		var values = [[uuidv4(), moment().utc().format("YYYY-MM-DD"), req.query.name, req.query.text, req.query.description ]]
+		con.query(sql, [values] ,function (err, result) {
+			if (err) return res.send(err);
+			return res.send("insert successfully: " + result);
+		});
+	}
+});
+
+// http://localhost:3000/getByName/data
+app.get('/getByName/:name', (req, res) => {
+	con.query("SELECT * FROM someTable WHERE name = " + mysql.escape(req.params.name), function (err, result, fields) {
+		if (err) return res.send(err);
+		return res.json(result);
+	});
+});
+
+// http://localhost:3000/getAll
+app.get('/getAll', (req, res) => {
+	con.query("SELECT * FROM someTable", function (err, result, fields) {
+		if (err) return res.send(err);
+		return res.json(result);
+	});
+});
+
+// generates a uuid
+function uuidv4() {
+	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+		var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+		return v.toString(16);
+	});
+}
+
+module.exports = app;
+```
 
 ***Info**/ **best practice**: Why should I always check the database for each request? Just create a **cache**. When the server starts or adds data to the database, it is filled with data. Advantage: significantly less load on the system and your database*
 
