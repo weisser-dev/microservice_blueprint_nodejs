@@ -13,7 +13,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 var con = mysql.createConnection({
-    host: "localhost",
+    // if you use it local use localhost, or use the ip of your host then it runs local and on docker
+    host: "host.docker.internal",
     user: "serviceuser",
     password: "lol",
     database: "examples"
